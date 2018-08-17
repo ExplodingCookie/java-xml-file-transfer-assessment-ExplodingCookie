@@ -15,20 +15,21 @@ public class Server {
 	public void startServer () {
 		System.out.println("Server started");
 		
-		
-		try (
-			ServerSocket ss = new ServerSocket(8080);	
-			Socket server = ss.accept();
-			InputStream bis = new BufferedInputStream(new DataInputStream(server.getInputStream()));
-		){
-			byte[] bytes = extractByteArray(bis);
-			ClientHandler ch = new ClientHandler(bytes, handledInts);
-			Thread t = new Thread(ch);
-			t.start();
-		} catch (IOException e) {
-			System.out.println("Server was unable to connect to the client: 8080");
-			e.printStackTrace();
-			//break;
+		while(true) {
+			try (
+				ServerSocket ss = new ServerSocket(8080);	
+				Socket server = ss.accept();
+				InputStream bis = new BufferedInputStream(new DataInputStream(server.getInputStream()));
+			){
+				byte[] bytes = extractByteArray(bis);
+				ClientHandler ch = new ClientHandler(bytes, handledInts);
+				Thread t = new Thread(ch);
+				t.start();
+			} catch (IOException e) {
+				System.out.println("Server was unable to connect to the client: 8080");
+				e.printStackTrace();
+				//break;
+			}
 		}
 	}
 	
