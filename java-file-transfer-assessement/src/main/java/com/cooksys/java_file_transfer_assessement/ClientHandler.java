@@ -1,9 +1,13 @@
 package com.cooksys.java_file_transfer_assessement;
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -14,11 +18,12 @@ import javax.xml.bind.Unmarshaller;
 
 public class ClientHandler implements Runnable {
 	
-	private byte[] bytes;
+	private Socket socket;
 	private int number;
+	private byte[] bytes;
 	
-	public ClientHandler (byte[] bytes, int number) {
-		this.bytes = bytes;
+	public ClientHandler (Socket socket, int number) {
+		this.socket = socket;
 		this.number = number;
 	}
 	
@@ -33,7 +38,17 @@ public class ClientHandler implements Runnable {
 
 	@Override
 	public void run() {
-		System.out.println("handler initiated!");
+		InputStream bis;
+		try {
+			bis = new BufferedInputStream(new DataInputStream(socket.getInputStream()));
+			byte[] bytes = Server.extractByteArray(bis);
+			this.bytes = bytes;
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}	
+		
+		System.out.println("handler initialized.");
 		
 		String filepath = "server/file" + number + ".xml";
 		
@@ -45,10 +60,6 @@ public class ClientHandler implements Runnable {
 			e.printStackTrace();
 		}
 		
-		unmarshallAndWrite(filepath);
-	}
-	
-	public void unmarshallAndWrite (String xmlPath) {
 		JAXBContext context = null;
         try {
         	context = JAXBContext.newInstance(MessageSender.class);
@@ -61,9 +72,21 @@ public class ClientHandler implements Runnable {
 		Unmarshaller um = createUnmarshaller(context);
 		
 		 try {
-			MessageSender unmarshalledMessager = (MessageSender) um.unmarshal(new FileInputStream(xmlPath));
-			writeTextFile(unmarshalledMessager);
+			MessageSender unmarshalledMessager = (MessageSender) um.unmarshal(new FileInputStream(filepath));
 		//	new File(xmlPath).delete();
+			
+			String directory = "server/" + unmarshalledMessager.getPersonName() + "/" + unmarshalledMessager.getDate() + "/";
+			 new File(directory).mkdirs();
+				
+			 Path path2 = Paths.get(directory, unmarshalledMessager.getFilename());
+				
+			 try {
+				 Files.write(path2, unmarshalledMessager.getBytes());
+				 System.out.println("File Written.");
+			 } catch (IOException e) {
+					// TODO Auto-generated catch block
+				 e.printStackTrace();
+			}
 		} catch (FileNotFoundException e) {
 			System.out.println("File not found.");
 			e.printStackTrace();
@@ -71,20 +94,7 @@ public class ClientHandler implements Runnable {
 			System.out.println("Unable to unmarshall file.");
 			e.printStackTrace();
 		}
-	}
-	
-	public void writeTextFile(MessageSender messager) {
-		String directory = "server/" + messager.getPersonName() + "/" + messager.getDate() + "/";
-		new File(directory).mkdirs();
-		
-		Path path = Paths.get(directory, messager.getFilename());
-		
-		try {
-			Files.write(path, messager.getBytes());
-			System.out.println("File Written.");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		 
+		 
 	}
 }

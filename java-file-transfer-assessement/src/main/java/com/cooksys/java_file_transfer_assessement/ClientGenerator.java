@@ -9,5 +9,11 @@ public class ClientGenerator {
 			Client client = new Client(sender);
 	        
 	        client.initialize();
+	        
+	        MessageSender sender2 = new MessageSender("Rex", 2018, 8, 17, "text2.txt", null);
+	    	
+			Client client2 = new Client(sender2);
+	        
+	        client2.initialize();
 	}
 }

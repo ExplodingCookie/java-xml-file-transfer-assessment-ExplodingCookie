@@ -1,8 +1,6 @@
 package com.cooksys.java_file_transfer_assessement;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -18,13 +16,10 @@ public class Server {
 		while(true) {
 			try (
 				ServerSocket ss = new ServerSocket(8080);	
-				Socket server = ss.accept();
-				InputStream bis = new BufferedInputStream(new DataInputStream(server.getInputStream()));
 			){
-				byte[] bytes = extractByteArray(bis);
-				ClientHandler ch = new ClientHandler(bytes, handledInts);
-				Thread t = new Thread(ch);
-				t.start();
+				Socket server = ss.accept();
+				Runnable ch = new ClientHandler(server, handledInts);
+				new Thread(ch).start();
 			} catch (IOException e) {
 				System.out.println("Server was unable to connect to the client: 8080");
 				e.printStackTrace();
@@ -33,7 +28,7 @@ public class Server {
 		}
 	}
 	
-	public byte[] extractByteArray (InputStream inputStream) throws IOException {
+	public static byte[] extractByteArray (InputStream inputStream) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		byte[] buffer = new byte[1024];
 		int read = 0;

@@ -49,6 +49,7 @@ public class Client {
 	}
 	
 	public void initialize () {
+		System.out.println("Client initialized");
 		getFileInput();
 		
 		JAXBContext context = null;
